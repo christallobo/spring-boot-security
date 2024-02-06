@@ -1,47 +1,87 @@
 package com.springboot.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import javax.sql.DataSource;
 
 @EnableWebSecurity
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+    @Autowired
+    DataSource dataSource;
+
+    /**
+     * The method is configured for the default database i.e. h2
+     * @param auth
+     * @throws Exception
+     */
+/*    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.jdbcAuthentication()
+                .dataSource(dataSource)
+                .withDefaultSchema()
+                .withUser(
+                        User.withUsername("user")
+                                .password("pass")
+                                .roles("USER")
+                )
+                .withUser(
+                        User.withUsername("admin")
+                                .password("pass")
+                                .roles("ADMIN")
+                );
+    }
+ */
+
+    /**
+     * When the database is using th default schema
+     * @param auth
+     * @throws Exception
+     */
+/*    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.jdbcAuthentication()
+                .dataSource(dataSource);
+    }
+ */
+
+    /**
+     * By using th flexible schema
+     * @param auth
+     * @throws Exception
+     */
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        // setting the configuration on the auth object(authentication)
-         auth.inMemoryAuthentication()
-                 .withUser("abc")
-                 .password("abc123")
-                 .roles("USER")
-                 //For multiple users
-                .and()
-                .withUser("foo")
-                .password("foo123")
-                .roles("ADMIN");
-    }
-
-    @Bean
-    public PasswordEncoder getPasswordEncoder(){
-       // It does nothing but keeps the clear text
-        return NoOpPasswordEncoder.getInstance();
+        auth.jdbcAuthentication()
+                .dataSource(dataSource)
+                .usersByUsernameQuery("select username,password,enabled " +
+                        "from users " +
+                        "where username = ?")
+                .authoritiesByUsernameQuery("select username,authority " +
+                        "from authorities " +
+                        "where username = ?");
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-//        http.authorizeRequests()
-//                .antMatchers("/**").hasRole("ADMIN")
-//                .and().formLogin();
-
-        //Role based authorization
         http.authorizeRequests()
                 .antMatchers("/admin").hasRole("ADMIN")
                 .antMatchers("/user").hasAnyRole("USER","ADMIN")
                 .antMatchers("/").permitAll()
                 .and().formLogin();
     }
+
+    @Bean
+    public PasswordEncoder getPasswordEncoder(){
+        return NoOpPasswordEncoder.getInstance();
+    }
+
 }
