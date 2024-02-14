@@ -1,6 +1,7 @@
-# spring-security
+# spring-security-LDAP
 
-The branches created
-- authentication
-- jdbc_authentication
-- jpa_authentication
+https://spring.io/guides/gs/authenticating-ldap
+
+For login page <br/>
+username : ben <br/>
+password : benspassword
