@@ -5,3 +5,4 @@ The branches created
 - jdbc_authentication
 - jpa_authentication
 - spring_security_ldap
+- spring_security_jwt
